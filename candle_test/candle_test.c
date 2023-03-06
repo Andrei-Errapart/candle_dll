@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 		device_mode_flags |= CANDLE_MODE_PAD_PKTS_TO_MAX_PKT_SIZE;
 
 	printf("Starting can device %u channel %u at bitrate %d with print rate %.3f secs\n",
-		args.device_number, args.device_channel, args.print_period);
+		args.device_number, args.device_channel, args.bitrate, args.print_period);
 
 	printf("Device mode flags: ");
 
