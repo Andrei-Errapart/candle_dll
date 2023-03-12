@@ -68,7 +68,7 @@ typedef struct {
 } candle_tx_rx_urb;
 
 typedef struct {
-    wchar_t path[256];
+    char path[256];
     candle_devstate_t state;
     candle_err_t last_error;
 

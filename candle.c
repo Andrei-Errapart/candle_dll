@@ -185,7 +185,7 @@ DLL bool __stdcall candle_dev_get_state(candle_handle hdev, candle_devstate_t *s
     }
 }
 
-DLL wchar_t * __stdcall candle_dev_get_path(candle_handle hdev)
+DLL char * __stdcall candle_dev_get_path(candle_handle hdev)
 {
     if (hdev==NULL) {
         return NULL;
