@@ -139,6 +139,8 @@ typedef struct {
 
 #pragma pack(pop)
 
+#if defined(WIN32)
+// Functions are available on Windows only.
 #ifdef CANDLE_API_LIBRARY
 #define DLL __declspec(dllexport)
 #else
@@ -180,6 +182,9 @@ DLL const char * __stdcall candle_error_text(candle_err_t errnum);
 
 // This is a convenience function to initialize a single device and start a channel on it
 DLL candle_err_t __stdcall candle_init_single_device(uint8_t device_num, uint8_t device_channel, uint32_t bitrate, candle_device_mode_flags_t device_mode_flags, candle_list_handle *plist, candle_handle *phdev);
+#else
+// We comppile on linux, too. We just 
+#endif
 
 #ifdef __cplusplus
 }
