@@ -28,6 +28,7 @@
 #include <setupapi.h>
 #include <devguid.h>
 #include <regstr.h>
+#include <stdbool.h>
 
 #undef __CRT__NO_INLINE
 #include <strsafe.h>
@@ -93,6 +94,8 @@ typedef struct {
 	HANDLE rxevents[CANDLE_URB_COUNT];
 
 	candle_device_mode_flags_t device_mode_flags;
+
+    bool is_cancelled;
 } candle_device_t;
 
 typedef struct {

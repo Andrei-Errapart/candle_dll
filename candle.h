@@ -157,7 +157,20 @@ DLL char* __stdcall candle_dev_get_path(candle_handle hdev);
 DLL bool __stdcall candle_dev_open(candle_handle hdev);
 DLL bool __stdcall candle_dev_get_timestamp_us(candle_handle hdev, uint32_t *timestamp_us);
 DLL bool __stdcall candle_dev_close(candle_handle hdev);
+/// <summary>
+/// Cancel all the pending IO on the device.
+/// Windows SEH errors are swallowed.
+/// </summary>
+/// <param name="hdev">CandleUSB device</param>
+/// <returns>Always true</returns>
+DLL bool __stdcall candle_dev_cancel_io(candle_handle hdev);
 DLL bool __stdcall candle_dev_free(candle_handle hdev);
+/// <summary>
+/// Is the IO on the device cancelled?
+/// </summary>
+/// <param name="hdev">CandleUSB device</param>
+/// <returns>False only when the device exists and the IO not been cancelled.</returns>
+DLL bool __stdcall candle_dev_is_cancelled(candle_handle hdev);
 
 DLL bool __stdcall candle_channel_count(candle_handle hdev, uint8_t *num_channels);
 DLL bool __stdcall candle_channel_get_capabilities(candle_handle hdev, uint8_t ch, candle_capability_t *cap);

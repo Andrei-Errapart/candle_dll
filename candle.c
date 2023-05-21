@@ -66,6 +66,7 @@ static bool candle_read_di(HDEVINFO hdi, SP_DEVICE_INTERFACE_DATA interfaceData,
     if (candle_dev_open(dev)) {
         dev->state = CANDLE_DEVSTATE_AVAIL;
         candle_dev_close(dev);
+        dev->is_cancelled = false;
     } else {
         dev->state = CANDLE_DEVSTATE_INUSE;
     }
@@ -333,13 +334,23 @@ static bool candle_close_tx_rx_urbs(candle_device_t *dev)
 {
 	for (unsigned i = 0; i<CANDLE_URB_COUNT; i++) {
 		if (dev->txevents[i] != NULL) {
-			close_urb(dev, &dev->txurbs[i]);
-			CloseHandle(dev->txevents[i]);
+            __try {
+                close_urb(dev, &dev->txurbs[i]);
+                CloseHandle(dev->txevents[i]);
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER) {
+                dev->is_cancelled = true;
+            }
 		}
 		if (dev->rxevents[i] != NULL) {
-			close_urb(dev, &dev->rxurbs[i]);
-			CloseHandle(dev->rxevents[i]);
-		}
+            __try {
+                close_urb(dev, &dev->rxurbs[i]);
+                CloseHandle(dev->rxevents[i]);
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER) {
+                dev->is_cancelled = true;
+            }
+        }
 	}
     return true;
 }
@@ -384,6 +395,7 @@ DLL bool __stdcall candle_dev_close(candle_handle hdev)
 	if (!dev)
 		return true;
 
+    dev->is_cancelled = true;
     candle_close_tx_rx_urbs(dev);
 	
 	// Check handle to see if it is initialized before we free it
@@ -392,7 +404,7 @@ DLL bool __stdcall candle_dev_close(candle_handle hdev)
     dev->winUSBHandle = NULL;
 
 	// Check handle to see if it is initialized before we free it
-	if (dev->deviceHandle)
+	if (dev->deviceHandle && dev->deviceHandle!=INVALID_HANDLE_VALUE)
 		CloseHandle(dev->deviceHandle);
     dev->deviceHandle = NULL;
 
@@ -400,10 +412,51 @@ DLL bool __stdcall candle_dev_close(candle_handle hdev)
     return true;
 }
 
+DLL bool __stdcall candle_dev_cancel_io(candle_handle hdev)
+{
+    candle_device_t* dev = (candle_device_t*)hdev;
+
+    if (!dev)
+        return true;
+
+    dev->is_cancelled = true;
+
+    for (unsigned i = 0; i < CANDLE_URB_COUNT; i++) {
+        if (dev->txevents[i] != NULL) {
+            __try {
+                CancelIoEx(dev->deviceHandle, &dev->txurbs[i].ovl);
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER) {
+            }
+        }
+        if (dev->rxevents[i] != NULL) {
+            __try {
+                CancelIoEx(dev->deviceHandle, &dev->rxurbs[i].ovl);
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER) {
+            }
+        }
+    }
+
+    return true;
+}
+
 DLL bool __stdcall candle_dev_free(candle_handle hdev)
 {
     free(hdev);
     return true;
+}
+
+DLL bool __stdcall candle_dev_is_cancelled(candle_handle hdev)
+{
+    candle_device_t* dev = (candle_device_t*)hdev;
+    if (!dev) {
+        return true;
+    }
+    if (dev->is_cancelled) {
+        return true;
+    }
+    return false;
 }
 
 candle_err_t DLL __stdcall candle_dev_last_error(candle_handle hdev)
